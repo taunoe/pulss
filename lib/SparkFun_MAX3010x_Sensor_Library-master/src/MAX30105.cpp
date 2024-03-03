@@ -429,85 +429,135 @@ uint8_t MAX30105::getRevisionID() {
 // Mode = MultiLED
 // ADC Range = 16384 (62.5pA per LSB)
 // Sample rate = 50
-// Use the default setup if you are just getting started with the MAX30105 sensor
-void MAX30105::setup(byte powerLevel, byte sampleAverage, byte ledMode, int sampleRate, int pulseWidth, int adcRange) {
-  softReset();  // Reset all configuration, threshold, and data registers to POR values
+
+int MAX30105::setup(uint8_t powerLevel,
+                    uint8_t sampleAverage,
+                    uint8_t ledMode,
+                    int sampleRate,
+                    int pulseWidth,
+                    int adcRange) {
+  // Reset all configuration, threshold, and data registers to POR values
+  softReset();
 
   // FIFO Configuration
   // The chip will average multiple samples of same type together if you wish
-  if (sampleAverage == 1) setFIFOAverage(MAX30105_SAMPLEAVG_1);  // No averaging per FIFO record
-  else if (sampleAverage == 2) setFIFOAverage(MAX30105_SAMPLEAVG_2);
-  else if (sampleAverage == 4) setFIFOAverage(MAX30105_SAMPLEAVG_4);
-  else if (sampleAverage == 8) setFIFOAverage(MAX30105_SAMPLEAVG_8);
-  else if (sampleAverage == 16) setFIFOAverage(MAX30105_SAMPLEAVG_16);
-  else if (sampleAverage == 32) setFIFOAverage(MAX30105_SAMPLEAVG_32);
-  else setFIFOAverage(MAX30105_SAMPLEAVG_4);
+  if (sampleAverage == 1) {
+    // No averaging per FIFO record
+    setFIFOAverage(MAX30105_SAMPLEAVG_1);
+  } else if (sampleAverage == 2) {
+    setFIFOAverage(MAX30105_SAMPLEAVG_2);
+  } else if (sampleAverage == 4) {
+    setFIFOAverage(MAX30105_SAMPLEAVG_4);
+  } else if (sampleAverage == 8) {
+    setFIFOAverage(MAX30105_SAMPLEAVG_8);
+  } else if (sampleAverage == 16) {
+    setFIFOAverage(MAX30105_SAMPLEAVG_16);
+  } else if (sampleAverage == 32) {
+    setFIFOAverage(MAX30105_SAMPLEAVG_32);
+  } else {
+    setFIFOAverage(MAX30105_SAMPLEAVG_4);
+  }
 
-  //setFIFOAlmostFull(2); //Set to 30 samples to trigger an 'Almost Full' interrupt
-  enableFIFORollover(); //Allow FIFO to wrap/roll over
-  //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+  // Set to 30 samples to trigger an 'Almost Full' interrupt
+  // setFIFOAlmostFull(2);
+  enableFIFORollover();  // Allow FIFO to wrap/roll over
 
-  //Mode Configuration
-  //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-  if (ledMode == 3) setLEDMode(MAX30105_MODE_MULTILED); //Watch all three LED channels
-  else if (ledMode == 2) setLEDMode(MAX30105_MODE_REDIRONLY); //Red and IR
-  else setLEDMode(MAX30105_MODE_REDONLY); //Red only
-  activeLEDs = ledMode; //Used to control how many bytes to read from FIFO buffer
-  //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-  //Particle Sensing Configuration
-  //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-  if(adcRange < 4096) setADCRange(MAX30105_ADCRANGE_2048); //7.81pA per LSB
-  else if(adcRange < 8192) setADCRange(MAX30105_ADCRANGE_4096); //15.63pA per LSB
-  else if(adcRange < 16384) setADCRange(MAX30105_ADCRANGE_8192); //31.25pA per LSB
-  else if(adcRange == 16384) setADCRange(MAX30105_ADCRANGE_16384); //62.5pA per LSB
-  else setADCRange(MAX30105_ADCRANGE_2048);
+  // Mode Configuration
+  if (ledMode == 3) {
+    // Watch all three LED channels
+    setLEDMode(MAX30105_MODE_MULTILED);
+  } else if (ledMode == 2) {
+    // Red and IR
+    setLEDMode(MAX30105_MODE_REDIRONLY);
+  } else {
+     // Red only
+    setLEDMode(MAX30105_MODE_REDONLY);
+  }
+  // Used to control how many bytes to read from FIFO buffer
+  activeLEDs = ledMode;
 
-  if (sampleRate < 100) setSampleRate(MAX30105_SAMPLERATE_50); //Take 50 samples per second
-  else if (sampleRate < 200) setSampleRate(MAX30105_SAMPLERATE_100);
-  else if (sampleRate < 400) setSampleRate(MAX30105_SAMPLERATE_200);
-  else if (sampleRate < 800) setSampleRate(MAX30105_SAMPLERATE_400);
-  else if (sampleRate < 1000) setSampleRate(MAX30105_SAMPLERATE_800);
-  else if (sampleRate < 1600) setSampleRate(MAX30105_SAMPLERATE_1000);
-  else if (sampleRate < 3200) setSampleRate(MAX30105_SAMPLERATE_1600);
-  else if (sampleRate == 3200) setSampleRate(MAX30105_SAMPLERATE_3200);
-  else setSampleRate(MAX30105_SAMPLERATE_50);
+  // Particle Sensing Configuration
+  if (adcRange < 4096) {
+    setADCRange(MAX30105_ADCRANGE_2048);  // 7.81pA per LSB
+  } else if (adcRange < 8192) {
+    setADCRange(MAX30105_ADCRANGE_4096);  // 15.63pA per LSB
+  } else if (adcRange < 16384) {
+    setADCRange(MAX30105_ADCRANGE_8192);  // 31.25pA per LSB
+  } else if (adcRange == 16384) {
+    setADCRange(MAX30105_ADCRANGE_16384);  // 62.5pA per LSB
+  } else {
+    setADCRange(MAX30105_ADCRANGE_2048);
+  }
 
-  //The longer the pulse width the longer range of detection you'll have
-  //At 69us and 0.4mA it's about 2 inches
-  //At 411us and 0.4mA it's about 6 inches
-  if (pulseWidth < 118) setPulseWidth(MAX30105_PULSEWIDTH_69); //Page 26, Gets us 15 bit resolution
-  else if (pulseWidth < 215) setPulseWidth(MAX30105_PULSEWIDTH_118); //16 bit resolution
-  else if (pulseWidth < 411) setPulseWidth(MAX30105_PULSEWIDTH_215); //17 bit resolution
-  else if (pulseWidth == 411) setPulseWidth(MAX30105_PULSEWIDTH_411); //18 bit resolution
-  else setPulseWidth(MAX30105_PULSEWIDTH_69);
-  //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+  if (sampleRate < 100) {
+    // Take 50 samples per second
+    setSampleRate(MAX30105_SAMPLERATE_50);
+  } else if (sampleRate < 200) {
+    setSampleRate(MAX30105_SAMPLERATE_100);
+  } else if (sampleRate < 400) {
+    setSampleRate(MAX30105_SAMPLERATE_200);
+  } else if (sampleRate < 800) {
+    setSampleRate(MAX30105_SAMPLERATE_400);
+  } else if (sampleRate < 1000) {
+    setSampleRate(MAX30105_SAMPLERATE_800);
+  } else if (sampleRate < 1600) {
+    setSampleRate(MAX30105_SAMPLERATE_1000);
+  } else if (sampleRate < 3200) {
+    setSampleRate(MAX30105_SAMPLERATE_1600);
+  } else if (sampleRate == 3200) {
+    setSampleRate(MAX30105_SAMPLERATE_3200);
+  } else {
+    setSampleRate(MAX30105_SAMPLERATE_50);
+  }
 
-  //LED Pulse Amplitude Configuration
-  //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
-  //Default is 0x1F which gets us 6.4mA
-  //powerLevel = 0x02, 0.4mA - Presence detection of ~4 inch
-  //powerLevel = 0x1F, 6.4mA - Presence detection of ~8 inch
-  //powerLevel = 0x7F, 25.4mA - Presence detection of ~8 inch
-  //powerLevel = 0xFF, 50.0mA - Presence detection of ~12 inch
+  // The longer the pulse width the longer range of detection you'll have
+  // At 69us and 0.4mA it's about 2 inches
+  // At 411us and 0.4mA it's about 6 inches
+  if (pulseWidth < 118) {
+    // Page 26, Gets us 15 bit resolution
+    setPulseWidth(MAX30105_PULSEWIDTH_69);
+  } else if (pulseWidth < 215) {
+    // 16 bit resolution
+    setPulseWidth(MAX30105_PULSEWIDTH_118);
+  } else if (pulseWidth < 411) {
+    // 17 bit resolution
+    setPulseWidth(MAX30105_PULSEWIDTH_215);
+  } else if (pulseWidth == 411) {
+    // 18 bit resolution
+    setPulseWidth(MAX30105_PULSEWIDTH_411);
+  } else {
+    setPulseWidth(MAX30105_PULSEWIDTH_69);
+  }
 
+  // LED Pulse Amplitude Configuration
+  // Default is 0x1F which gets us 6.4mA
+  // powerLevel = 0x02, 0.4mA - Presence detection of ~4 inch
+  // powerLevel = 0x1F, 6.4mA - Presence detection of ~8 inch
+  // powerLevel = 0x7F, 25.4mA - Presence detection of ~8 inch
+  // powerLevel = 0xFF, 50.0mA - Presence detection of ~12 inch
   setPulseAmplitudeRed(powerLevel);
   setPulseAmplitudeIR(powerLevel);
   setPulseAmplitudeGreen(powerLevel);
   setPulseAmplitudeProximity(powerLevel);
-  //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
 
-  //Multi-LED Mode Configuration, Enable the reading of the three LEDs
-  //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+
+  // Multi-LED Mode Configuration, Enable the reading of the three LEDs
   enableSlot(1, SLOT_RED_LED);
-  if (ledMode > 1) enableSlot(2, SLOT_IR_LED);
-  if (ledMode > 2) enableSlot(3, SLOT_GREEN_LED);
-  //enableSlot(1, SLOT_RED_PILOT);
-  //enableSlot(2, SLOT_IR_PILOT);
-  //enableSlot(3, SLOT_GREEN_PILOT);
-  //-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-
+  if (ledMode > 1) {
+    enableSlot(2, SLOT_IR_LED);
+  }
+  if (ledMode > 2) {
+    enableSlot(3, SLOT_GREEN_LED);
+  }
+  // enableSlot(1, SLOT_RED_PILOT);
+  // enableSlot(2, SLOT_IR_PILOT);
+  // enableSlot(3, SLOT_GREEN_PILOT);
 
-  clearFIFO(); //Reset the FIFO before we begin checking the sensor
+  // Reset the FIFO before we begin checking the sensor
+  clearFIFO();
+
+  return 1;
 }
 
 //
@@ -533,14 +583,13 @@ uint32_t MAX30105::getRed(void)
     return(0); //Sensor failed to find new data
 }
 
-//Report the most recent IR value
-uint32_t MAX30105::getIR(void)
-{
-  //Check the sensor for new data for 250ms
-  if(safeCheck(250))
+// Report the most recent IR value
+uint32_t MAX30105::getIR(void) {
+  // Check the sensor for new data for 250ms
+  if (safeCheck(250))
     return (sense.IR[sense.head]);
   else
-    return(0); //Sensor failed to find new data
+    return(0);  // Sensor failed to find new data
 }
 
 //Report the most recent Green value
