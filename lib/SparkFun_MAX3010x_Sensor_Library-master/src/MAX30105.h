@@ -22,11 +22,11 @@
 
 #include <Wire.h>
 
-#define MAX30105_ADDRESS          0x57  // 7-bit I2C Address
+#define MAX30105_ADDRESS   0x57  // 7-bit I2C Address
 // Note that MAX30102 has the same I2C address and Part ID
 
-#define I2C_SPEED_STANDARD        100000
-#define I2C_SPEED_FAST            400000
+#define I2C_SPEED_STANDARD 100000
+#define I2C_SPEED_FAST     400000
 
 // Define the size of the I2C buffer based on the platform the user has
 #if defined(__AVR_ATmega328P__) || defined(__AVR_ATmega168__)
@@ -60,7 +60,8 @@ class MAX30105 {
   uint32_t getRed(void);  // Returns immediate red value
   uint32_t getIR(void);  // Returns immediate IR value
   uint32_t getGreen(void);  // Returns immediate green value
-  bool safeCheck(uint8_t maxTimeToCheck);  // Given a max amount of time, check for new data
+  // Given a max amount of time, check for new data
+  bool safeCheck(uint8_t maxTimeToCheck);
 
   // Configuration
   void softReset();
@@ -81,7 +82,8 @@ class MAX30105 {
   void setProximityThreshold(uint8_t threshMSB);
 
   // Multi-led configuration mode (page 22)
-  void enableSlot(uint8_t slotNumber, uint8_t device);  // Given slot number, assign a device to slot
+  // Given slot number, assign a device to slot
+  void enableSlot(uint8_t slotNumber, uint8_t device);
   void disableSlots(void);
 
   // Data Collection

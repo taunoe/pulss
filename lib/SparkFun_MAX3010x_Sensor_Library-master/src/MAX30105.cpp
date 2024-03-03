@@ -7,6 +7,9 @@
 
   Written by Peter Jansen and Nathan Seidle (SparkFun)
   BSD license, all text above must be included in any redistribution.
+
+  Edited: 03.03.2024 Tauno Erik
+  
  *****************************************************/
 
 #include "MAX30105.h"
@@ -26,7 +29,7 @@ static const uint8_t MAX30105_FIFODATA = 0x07;
 // Configuration Registers
 static const uint8_t MAX30105_FIFOCONFIG = 0x08;
 static const uint8_t MAX30105_MODECONFIG = 0x09;
-static const uint8_t MAX30105_PARTICLECONFIG = 0x0A;    // Note, sometimes listed as "SPO2" config in datasheet (pg. 11)
+static const uint8_t MAX30105_PARTICLECONFIG = 0x0A;  // Note, sometimes listed as "SPO2" config in datasheet (pg. 11)
 static const uint8_t MAX30105_LED1_PULSEAMP = 0x0C;
 static const uint8_t MAX30105_LED2_PULSEAMP = 0x0D;
 static const uint8_t MAX30105_LED3_PULSEAMP = 0x0E;
@@ -44,7 +47,7 @@ static const uint8_t MAX30105_PROXINTTHRESH = 0x30;
 
 // Part ID Registers
 static const uint8_t MAX30105_REVISIONID = 0xFE;
-static const uint8_t MAX30105_PARTID = 0xFF;    // Should always be 0x15. Identical to MAX30102.
+static const uint8_t MAX30105_PARTID = 0xFF;  // Should always be 0x15. Identical to MAX30102.
 
 // MAX30105 Commands
 // Interrupt configuration (pg 13, 14)
@@ -151,7 +154,8 @@ boolean MAX30105::begin(TwoWire &wirePort, uint32_t i2cSpeed, uint8_t i2caddr) {
   // Check that a MAX30105 is connected
   if (readPartID() != MAX_30105_EXPECTEDPARTID) {
     // Error -- Part ID read from MAX30105 does not match expected part ID.
-    // This may mean there is a physical connectivity problem (broken wire, unpowered, etc).
+    // This may mean there is a physical connectivity problem
+    // (broken wire, unpowered, etc).
     return false;
   }
 
