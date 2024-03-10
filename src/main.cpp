@@ -2,7 +2,7 @@
  Copyright 2024
  Tauno Erik
  Started 01.03.2024
- Edited  03.03.2024
+ Edited  10.03.2024
  MAX30102 Heart Rate Sensor
  ESP8266 MCU
 
@@ -25,10 +25,14 @@
 #include "tauno_debug.h"
 
 #include "FastLED.h"
+#define ON  1
+#define OFF 0
 const uint8_t LED_DATA_PIN = D5;
-const uint8_t NUM_LEDS = 24;
+const uint8_t NUM_BEAMS = 9;
+const uint8_t NUM_LEDS_IN_BEAM = 12;
+const uint8_t NUM_OF_LEDS = NUM_LEDS_IN_BEAM*NUM_BEAMS;
 
-CRGB leds[NUM_LEDS];
+CRGB leds[NUM_OF_LEDS];
 
 // Init Heart Rate Sensor
 MAX30105 pulss;
@@ -38,10 +42,10 @@ const int BUFFER_SIZE = 24;
 uint32_t ir_values_buffer[BUFFER_SIZE] = {};
 uint32_t no_person_value = 0;
 
-void tauno_heart_beat_setup();
-void tauno_heart_beat_loop();
-uint32_t find_min();
-uint32_t find_max();
+void tauno_heart_beat_setup();  //  Setup sensor
+void tauno_heart_beat_loop();   // Main loop
+uint32_t find_min();            // find min from ir_values_buffer
+uint32_t find_max();            // find max from ir_values_buffer
 void print_buffer();
 int32_t tauno_map(int32_t x,
                   int32_t in_min,
@@ -70,7 +74,7 @@ void setup() {
     }
   }
 
-  FastLED.addLeds<NEOPIXEL, LED_DATA_PIN>(leds, NUM_LEDS);
+  FastLED.addLeds<NEOPIXEL, LED_DATA_PIN>(leds, NUM_OF_LEDS);
 
   tauno_heart_beat_setup();
 }
@@ -235,37 +239,44 @@ uint32_t find_max() {
  The main loop!
 */
 void tauno_heart_beat_loop() {
+  static uint8_t hue = 250;  // 0-255
+  static uint8_t saturation = 200;  // 0-255
+  static uint8_t value = 50;  // 0-255
+
   uint32_t ir_val = pulss.getIR();
-  // DEBUG_PRINT("IR ");
-  // DEBUG_PRINT(ir_val);
+  DEBUG_PRINT("IR ");
+  DEBUG_PRINT(ir_val);
 
   add_to_buffer(ir_val);
   // print_buffer();
   uint32_t in_min = find_min();
   uint32_t in_max = find_max();
 
-  int numLedsToLight = tauno_map(ir_val, in_min, in_max, 0, NUM_LEDS);
+  uint8_t numLedsToLight = tauno_map(ir_val, in_min, in_max, 0, NUM_LEDS_IN_BEAM);
   DEBUG_PRINT(" LEDS ");
   DEBUG_PRINT(numLedsToLight);
   DEBUG_PRINT("\n")
 
   if (ir_val > (no_person_value+120)) {
     FastLED.clear();
-    for (int led = 0; led < numLedsToLight; led++) {
-      if (led == (numLedsToLight-1)) {
-        leds[led].setRGB(10, 0, 0);
-      } else if (led == (numLedsToLight-2)) {
-        leds[led].setRGB(20, 0, 0);
-      } else if (led == (numLedsToLight-3)) {
-        leds[led].setRGB(30, 0, 0);
-      } else if (led == (numLedsToLight-4)) {
-        leds[led].setRGB(40, 0, 0);
-      } else {
-        leds[led].setRGB(50, 0, 0);
-      }
 
+    for (uint8_t led = 0; led < numLedsToLight; led++) {
+      leds[led] = CHSV(hue, saturation, value);
+      leds[(1*NUM_LEDS_IN_BEAM) + led] = CHSV(hue, saturation, value);
+      leds[(2*NUM_LEDS_IN_BEAM) + led] = CHSV(hue, saturation, value);
+      leds[(3*NUM_LEDS_IN_BEAM) + led] = CHSV(hue, saturation, value);
+      leds[(4*NUM_LEDS_IN_BEAM) + led] = CHSV(hue, saturation, value);
+      leds[(5*NUM_LEDS_IN_BEAM) + led] = CHSV(hue, saturation, value);
+      leds[(6*NUM_LEDS_IN_BEAM) + led] = CHSV(hue, saturation, value);
+      leds[(7*NUM_LEDS_IN_BEAM) + led] = CHSV(hue, saturation, value);
+      leds[(8*NUM_LEDS_IN_BEAM) + led] = CHSV(hue, saturation, value);
+      // Alljärgnev põhjustab restardi
+      // for (uint8_t i = 0; i < NUM_LEDS_IN_BEAM; i++) {
+      //   leds[(i*NUM_LEDS_IN_BEAM) + led] = CHSV(hue, saturation, value);
+      // }
       FastLED.show();
     }
+
   } else {
     FastLED.clear();
     FastLED.show();
