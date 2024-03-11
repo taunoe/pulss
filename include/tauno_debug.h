@@ -1,7 +1,7 @@
 /*
  Copyright 2024 Tauno Erik
  Started 02.03.2024
- Edited  02.03.2024
+ Edited  11.03.2024
 */
 #ifndef TAUNO_DEBUG_H_
 #define TAUNO_DEBUG_H_
@@ -12,6 +12,7 @@
   #define DEBUG_PRINTLN(...)      Serial.println(__VA_ARGS__);
   #define DEBUG_WRITE(...)        Serial.write(__VA_ARGS__);
 #else
+  #define DEBUG_SERIAL_BEGIN(...)
   #define DEBUG_PRINT(...)
   #define DEBUG_PRINT(...)
   #define DEBUG_PRINTLN(...)

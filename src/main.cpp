@@ -2,7 +2,7 @@
  Copyright 2024
  Tauno Erik
  Started 01.03.2024
- Edited  10.03.2024
+ Edited  11.03.2024
  MAX30102 Heart Rate Sensor
  ESP8266 MCU
 
@@ -21,7 +21,7 @@
 #include "MAX30105.h"   // SparkFun MAX3010x
 #include "heartRate.h"  // SparkFun MAX3010x
 
-#define TAUNO_DEBUG 1
+#define TAUNO_DEBUG 0
 #include "tauno_debug.h"
 
 #include "FastLED.h"
@@ -42,6 +42,7 @@ const int BUFFER_SIZE = 24;
 uint32_t ir_values_buffer[BUFFER_SIZE] = {};
 uint32_t no_person_value = 0;
 
+void tauno_aura_analyzer();
 void tauno_heart_beat_setup();  //  Setup sensor
 void tauno_heart_beat_loop();   // Main loop
 uint32_t find_min();            // find min from ir_values_buffer
@@ -80,7 +81,8 @@ void setup() {
 }
 
 void loop() {
-  tauno_heart_beat_loop();
+  tauno_aura_analyzer();
+  // tauno_heart_beat_loop();
 }
 
 
@@ -270,10 +272,57 @@ void tauno_heart_beat_loop() {
       leds[(6*NUM_LEDS_IN_BEAM) + led] = CHSV(hue, saturation, value);
       leds[(7*NUM_LEDS_IN_BEAM) + led] = CHSV(hue, saturation, value);
       leds[(8*NUM_LEDS_IN_BEAM) + led] = CHSV(hue, saturation, value);
-      // Alljärgnev põhjustab restardi
-      // for (uint8_t i = 0; i < NUM_LEDS_IN_BEAM; i++) {
-      //   leds[(i*NUM_LEDS_IN_BEAM) + led] = CHSV(hue, saturation, value);
-      // }
+      FastLED.show();
+    }
+
+  } else {
+    FastLED.clear();
+    FastLED.show();
+  }
+}
+
+
+/*
+ main loop
+ Biovälja nalüsaator
+*/
+void tauno_aura_analyzer() {
+  static uint8_t hue = 250;  // 0-255
+  static uint8_t saturation = 220;  // 0-255
+  static uint8_t value = 60;  // 0-255
+
+  uint32_t ir_val = pulss.getIR();
+  DEBUG_PRINT("IR ");
+  DEBUG_PRINT(ir_val);
+
+  hue = ir_val % 255;
+  DEBUG_PRINT(" modulo ");
+  DEBUG_PRINT(hue);
+
+  add_to_buffer(ir_val);
+  // print_buffer();
+  uint32_t in_min = find_min();
+  uint32_t in_max = find_max();
+
+  uint8_t numLedsToLight = tauno_map(ir_val, in_min, in_max, 0, NUM_LEDS_IN_BEAM);
+  DEBUG_PRINT(" LEDS ");
+  DEBUG_PRINT(numLedsToLight);
+  DEBUG_PRINT("\n")
+
+  if (ir_val > (no_person_value+120)) {
+    FastLED.clear();
+
+    for (uint8_t led = 0; led < numLedsToLight; led++) {
+      leds[led] = CHSV(hue, saturation, value);
+      leds[(1*NUM_LEDS_IN_BEAM) + led] = CHSV(hue, saturation, value);
+      leds[(2*NUM_LEDS_IN_BEAM) + led] = CHSV(hue, saturation, value);
+      leds[(3*NUM_LEDS_IN_BEAM) + led] = CHSV(hue, saturation, value);
+      leds[(4*NUM_LEDS_IN_BEAM) + led] = CHSV(hue, saturation, value);
+      leds[(5*NUM_LEDS_IN_BEAM) + led] = CHSV(hue, saturation, value);
+      leds[(6*NUM_LEDS_IN_BEAM) + led] = CHSV(hue, saturation, value);
+      leds[(7*NUM_LEDS_IN_BEAM) + led] = CHSV(hue, saturation, value);
+      leds[(8*NUM_LEDS_IN_BEAM) + led] = CHSV(hue, saturation, value);
+
       FastLED.show();
     }
 
